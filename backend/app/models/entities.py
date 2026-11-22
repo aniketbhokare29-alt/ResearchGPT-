@@ -40,6 +40,18 @@ class User(TimestampMixin, Base):
     conversations: Mapped[list["Conversation"]] = relationship(back_populates="owner", cascade="all, delete-orphan")
     reports: Mapped[list["GeneratedReport"]] = relationship(back_populates="owner", cascade="all, delete-orphan")
     agent_runs: Mapped[list["AgentRun"]] = relationship(back_populates="owner", cascade="all, delete-orphan")
+    revoked_tokens: Mapped[list["RevokedToken"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+
+
+class RevokedToken(Base):
+    __tablename__ = "revoked_tokens"
+
+    jti: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    revoked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    user: Mapped[User] = relationship(back_populates="revoked_tokens")
 
 
 class ResearchPaper(TimestampMixin, Base):
@@ -62,7 +74,11 @@ class ResearchPaper(TimestampMixin, Base):
     sha256: Mapped[str] = mapped_column(String(64))
     page_count: Mapped[int | None] = mapped_column(Integer)
     processing_status: Mapped[str] = mapped_column(String(24), default="pending", index=True)
+    processing_step: Mapped[str | None] = mapped_column(String(40))
     processing_error: Mapped[str | None] = mapped_column(Text)
+    summary: Mapped[dict | None] = mapped_column(JSON)
+    summary_status: Mapped[str] = mapped_column(String(24), default="not_requested", nullable=False)
+    summary_error: Mapped[str | None] = mapped_column(Text)
 
     owner: Mapped[User] = relationship(back_populates="papers")
     pages: Mapped[list["PaperPage"]] = relationship(back_populates="paper", cascade="all, delete-orphan")
@@ -117,6 +133,8 @@ class PaperChunk(Base):
     text: Mapped[str] = mapped_column(Text)
     token_count: Mapped[int | None] = mapped_column(Integer)
     vector_id: Mapped[str | None] = mapped_column(String(128), index=True)
+    embedding: Mapped[list | None] = mapped_column(JSON)
+    embedding_model: Mapped[str | None] = mapped_column(String(255))
 
     paper: Mapped[ResearchPaper] = relationship(back_populates="chunks")
 

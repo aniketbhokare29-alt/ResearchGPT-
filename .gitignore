@@ -10,5 +10,6 @@ dist/
 coverage/
 data/uploads/
 data/indexes/
+data/indexes/
 *.db
 
