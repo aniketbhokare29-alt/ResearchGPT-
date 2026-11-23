@@ -40,6 +40,13 @@ class Settings(BaseSettings):
             origins.add(urlunsplit((parts.scheme, netloc, parts.path, parts.query, parts.fragment)).rstrip("/"))
         return sorted(origins)
 
+    @property
+    def frontend_origin_regex(self) -> str | None:
+        """Permit Vite's alternate loopback ports during local development."""
+        if self.app_env.lower() != "development":
+            return None
+        return r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$"
+
     model_config = SettingsConfigDict(env_file=REPOSITORY_ROOT / ".env", extra="ignore")
 
 
